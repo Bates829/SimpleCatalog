@@ -83,9 +83,16 @@ function buildGallery(imageTags){
 		html += '<body>';
 		html += ' <h1>' + config.title + '</h1>';
 		html += '  <a href="imageTags">' + imageNamesToTags(imageTags).join('') + '</a>';
-		html += '	<form action="" method="POST" enctype="multipart/form-data">'
-		html += '		<input type="file" name="image"/>'
-		html += '		<input type="submit" value="Upload Image"/>'
+		html += '	<form action="" method="POST" enctype="multipart/form-data">';
+		html += '		<input type="file" name="image"/>';
+		html += '		<input type="submit" value="Upload Image"/>';
+		html += '	</form>';
+		html += '	<br>';
+		html += '	<form>';
+		html += '		Name of Tree: ';
+		html += '		<input type ="text" name="treeName"/> ';
+		html += '		Description ';
+		html += '		<input type = "text" name="description"/>';
 		html += '	</form>'
 		html += '</body>';
 	return html;
