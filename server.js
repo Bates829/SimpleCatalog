@@ -1,13 +1,14 @@
 /**
  * server.js
  * This file defines the server for a
- * simple photo gallery web app.
+ * simple tree catalog.
  */
 
 "use strict";
 
 /*global varibles */
 var multipart = require('./multipart');
+var template = require('./template');
 var http = require('http'); //Http library
 var fs = require('fs'); //Library to access Filesystem
 var url = require('url'); //URL library
@@ -16,6 +17,8 @@ var port = 3433; //Listening port
 /*load cahced files */
 var config = JSON.parse(fs.readFileSync('config.json')); //Loads config file
 var stylesheet = fs.readFileSync('catalog.css'); //Load in css stylesheet
+
+template.loadDir('templates');
 
 /** @function getImageNames
  * Retrieves the filenames for all images in the
@@ -47,13 +50,13 @@ function imageNamesToTags(fileNames){
 	});
 }
 
-/** @function serveGallery
+/** @function serveCatalog
  * A function to serve a HTML page representing a
- * gallery of images.
+ * catalog of tree images.
  * @param {http.incomingRequest} req - the request object
  * @param {http.serverResponse} res - the response object
  */
-function serveGallery(req, res){
+function serveCatalog(req, res){
 	getImageNames(function(err, imageNames){
 		if(err){
 			console.error(err);
@@ -63,39 +66,22 @@ function serveGallery(req, res){
 			return;
 		}
 		res.setHeader('Content-Type', 'text/html');
-		res.end(buildGallery(imageNames));
+		res.end(buildCatalog(imageNames));
 	});
 }
 
 /**
- * @function buildGallery
+ * @function buildCatalog
  * A helper function to build an HTML string
- * of a gallery webpage.
+ * of a tree catalog webpage.
  * @param {string[]} imageTags - the HTML for the individual
  * gallery images.
  */
-function buildGallery(imageTags){
-	var html = '<!doctype html>';
-		html += '<head>';
-		html += ' <title>'+ config.title + '</title>';
-		html += ' <link href="catalog.css" rel="stylesheet" type="text/css"/>';
-		html += '</head>';
-		html += '<body>';
-		html += ' <h1>' + config.title + '</h1>';
-		html += '  <a href="imageTags">' + imageNamesToTags(imageTags).join('') + '</a>';
-		html += '	<form action="" method="POST" enctype="multipart/form-data">';
-		html += '		<input type="file" name="image"/>';
-		html += '		<input type="submit" value="Upload Image"/>';
-		html += '	</form>';
-		html += '	<br>';
-		html += '	<form>';
-		html += '		Name of Tree: ';
-		html += '		<input type ="text" name="treeName"/> ';
-		html += '		Description ';
-		html += '		<input type = "text" name="description"/>';
-		html += '	</form>'
-		html += '</body>';
-	return html;
+function buildCatalog(imageTags){
+	return template.render('catalog.html', {
+		title: config.title,
+		imageTags: imageNamesToTags(imageTags).join('')
+	});
 }
 
 /** @function serveImage
@@ -144,7 +130,7 @@ function uploadImage(req, res) {
         res.end("Server Error");
         return;
       }
-      serveGallery(req, res);
+      serveCatalog(req, res);
     });
   });
 }
@@ -172,7 +158,7 @@ function handleRequest(req, res) {
     case '/':
     case '/catalog':
       if(req.method == 'GET') {
-        serveGallery(req, res);
+        serveCatalog(req, res);
       } else if(req.method == 'POST') {
         uploadImage(req, res);
       }

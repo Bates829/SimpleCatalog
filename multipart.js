@@ -160,7 +160,7 @@ function parseContent(buffer, callback) {
   // If our content is a file, we expect to see a filename
   // in the content-disposition header; if there isn't a filename,
   // then our body is a field value rather than a binary blob
-  var filename = /filename="([^\\/:\*\?"<>\|]+)"/.exec(headers['content-disposition']);
+  var filename = /filename="([^;"]+)"/.exec(headers['content-disposition']);
   if(filename) {
     // If our content is a file, there may be a Content-Type header
     var contentType = headers['content-type'];
