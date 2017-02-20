@@ -6,7 +6,9 @@
   </head>
   <body>
     <h1><%=context.title%></h1>
-    <a href="imageTags"><%=context.imageTags%></a>
+    <ul>
+    <li><a href=""><%=context.imageTags%></a></li>
+  </ul>
     <form action="" method="POST" enctype="multipart/form-data">
     	<input type="file" name="image"/>
     	<input type="submit" value="Upload Image"/>
