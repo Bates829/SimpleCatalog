@@ -16,9 +16,28 @@ var port = 3433; //Listening port
 
 /*load cahced files */
 var config = JSON.parse(fs.readFileSync('config.json')); //Loads config file
-var stylesheet = fs.readFileSync('catalog.css'); //Load in css stylesheet
+var stylesheet = fs.readFileSync('public/catalog.css'); //Load in css stylesheet
 
 template.loadDir('templates');
+
+/*Variable to store JSON files and call loadDir to get files*/
+var jsonfiles = {};
+loadDir('public/JSON');
+
+/** @function loadDir
+* Loads directory of JSON files
+* @param {string} directory - The directory that will loaded
+*/
+function loadDir(directory){
+	var dir = fs.readdirSync(directory);
+	dir.forEach(function(file){
+		var filePath = directory + '/' + file;
+		var stats = fs.statSync(filePath);
+		if(stats.isFile()){
+			jsonfiles[file.split('.')[0]] = JSON.parse(fs.readFileSync(filePath).toString());
+		}
+	});
+}
 
 /** @function getImageNames
  * Retrieves the filenames for all images in the
@@ -27,7 +46,7 @@ template.loadDir('templates');
  * error and array of filenames as parameters
  */
 function getImageNames(callback){
-	fs.readdir('images/', function(err, fileNames){
+	fs.readdir('public/images/', function(err, fileNames){
 			if(err){
 				callback(err, undefined);
 			}
@@ -37,36 +56,16 @@ function getImageNames(callback){
 	});
 }
 
-/** @function imageNamesToTags
+/** @function treeNamesToTags
  * Helper function that takes an array of image
  * filenames, and returns an array of HTML img
  * tags build using those names.
  * @param {string[]} filenames - the image filenames
  * @return {string[]} an array of HTML img tags
  */
-function imageNamesToTags(fileNames){
+function treeNamesToTags(fileNames){
 	return fileNames.map(function(fileName){
-		return `<img src="${fileName}" alt="${fileName}"/>`;
-	});
-}
-
-/** @function serveCatalog
- * A function to serve a HTML page representing a
- * catalog of tree images.
- * @param {http.incomingRequest} req - the request object
- * @param {http.serverResponse} res - the response object
- */
-function serveCatalog(req, res){
-	getImageNames(function(err, imageNames){
-		if(err){
-			console.error(err);
-			res.statusCode = 500;
-			res.statusMessage = "Server Error";
-			res.end();
-			return;
-		}
-		res.setHeader('Content-Type', 'text/html');
-		res.end(buildCatalog(imageNames));
+		return `<a href = "${'tree/' + fileName.split('.')[0]}"><img src="${fileName}" alt="${fileName}"/></a>`;
 	});
 }
 
@@ -75,14 +74,13 @@ function serveCatalog(req, res){
  * A helper function to build an HTML string
  * of a tree catalog webpage.
  * @param {string[]} imageTags - the HTML for the individual
- * gallery images.
+ * catalog images.
  */
-function buildCatalog(imageTags){
-	return template.render('catalog.html', {
-		title: config.title,
-		imageTags: imageNamesToTags(imageTags).join('')
-	});
-}
+function buildCatalog(imageTags) {
+ 	return template.render('catalog.html', {
+ 		imageTags: treeNamesToTags(imageTags).join('')
+ 	});
+ }
 
 /** @function serveImage
  * A function to serve an image file.
@@ -92,7 +90,7 @@ function buildCatalog(imageTags){
  * @param {http.serverResponse} - the response object
  */
 function serveImage(fileName, req, res){
-	fs.readFile('images/' + decodeURIComponent(fileName), function(err, data){
+	fs.readFile('public/images/' + decodeURIComponent(fileName), function(err, data){
 			if(err){
 				console.error(err);
 				res.statusCode = 404;
@@ -100,38 +98,126 @@ function serveImage(fileName, req, res){
 				res.end();
         return;
 			}
-		res.setHeader("Content-Type", "image/jpeg");
+		res.setHeader("Content-Type", "image/*");
 		res.end(data);
+	});
+}
+
+/** @function getTreeImage
+* @param {function} callback - function thattakes an error
+* and array of filenames as parameters
+*/
+function getTreeImage(callback){
+	fs.readdir('public/images/', function(err, filename){
+		if(err){
+			callback(err, undefined);
+		}
+		else{
+			callback(false, filename);
+		}
+	});
+}
+
+/** @function getJSON
+* @param {function} callback - function thattakes an error
+* and array of filenames as parameters
+*/
+function getJSON(callback){
+	fs.readdir('public/JSON/', function(err, filename){
+		if(err){
+			callback(err, undefined);
+		}
+		else{
+			callback(false, filename);
+		}
+	});
+}
+
+/** @function serveTrees
+* @param {string} filename
+* @param {http.incomingRequest} - the request object
+* @param {http.serverResponse} - the response object
+*/
+function serveTrees(filename, req, res){
+	res.setHeader('Content-Type', 'text/html');
+	res.end(buildTreePage(filename));
+}
+
+/** @function serveAll
+* @param {http.incomingRequest} - the request object
+* @param {http.serverResponse} - the response object
+*/
+function serveAll(req, res){
+	getTreeImage(function(err, treeNames){
+		if(err){
+			console.error(err);
+			res.statusCode = 500;
+			res.statusMessage = 'Server error';
+			res.end();
+			return;
+		}
+		res.setHeader('Content-Type', 'text/html');
+		res.end(buildCatalog(treeNames));
+	});
+}
+
+/** @function treeToHTMLTag
+* @param {string} - the tree image file
+* @return {string} - tree image tag
+*/
+function treeToHTMLTag(tree){
+	return '<img src ="${tree}" alt="Example of tree">';
+}
+
+/** @function buildTreePage
+* @param {string} - filename of tree image
+* @return returns a new page of selected tree
+*/
+function buildTreePage(filename){
+	var data = jsonfiles[filename];
+	//Need html page for tree data
+	return template.render('treeData.html', {
+		imageTag: treeToHTMLTag(data.picturePath),
+		name: data.name,
+		description: data.description
+	});
+}
+
+/** @function uploadJSONData
+* @param {http.incomingRequest} - the request object
+* @param {http.serverResponse} - the response object
+*/
+function uploadJSONData(req, res){
+	multipart(req, res, function(){
+		var jsonData ={
+			imageTags: req.body.image.filename,
+			name: req.body.name,
+			description: req.body.description
+		}
+		uploadImage(req, res);
+		var jsonName = req.body.image.filename.split('.')[0];
+		var jsonExtension = '.json';
+		fs.writeFile(jsonName	+ jsonExtension, jsonData);
+		jsonData[jsonName] = jsonData;
 	});
 }
 
 /** @function uploadImage
  * A function to process an http POST request
- * containing an image to add to the gallery.
+ * containing an image to add to the catalog.
  * @param {http.incomingRequest} req - the request object
  * @param {http.serverResponse} res - the response object
  */
 function uploadImage(req, res) {
-  multipart(req, res, function(req, res) {
-    // make sure an image was uploaded
-    console.log('filename', req.body.filename)
-    if(!req.body.image.filename) {
-      console.error("No file in upload");
-      res.statusCode = 400;
-      res.statusMessage = "No file specified"
-      res.end("No file specified");
+  fs.writeFile('public/images/' + req.body.image.filename, req.body.image.data, function(err){
+    if(err) {
+      console.error(err);
+      res.statusCode = 500;
+      res.statusMessage = "Server Error";
+      res.end("Server Error");
       return;
     }
-    fs.writeFile('images/' + req.body.image.filename, req.body.image.data, function(err){
-      if(err) {
-        console.error(err);
-        res.statusCode = 500;
-        res.statusMessage = "Server Error";
-        res.end("Server Error");
-        return;
-      }
-      serveCatalog(req, res);
-    });
+    serveCatalog(req, res);
   });
 }
 
@@ -158,17 +244,22 @@ function handleRequest(req, res) {
     case '/':
     case '/catalog':
       if(req.method == 'GET') {
-        serveCatalog(req, res);
+        serveAll(req, res);
       } else if(req.method == 'POST') {
-        uploadImage(req, res);
+        uploadJSONData(req, res);
       }
       break;
-    case '/catalog.css':
+    case '/public/catalog.css':
       res.setHeader('Content-Type', 'text/css');
       res.end(stylesheet);
       break;
     default:
+			if(req.url.split('/')[1] == 'tree'){
+				serveTrees(req.url.split('/')[2], req, res);
+			}
+			else{
       serveImage(req.url, req, res);
+		}
   }
 }
 
