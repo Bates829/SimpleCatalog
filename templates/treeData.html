@@ -1,11 +1,16 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title></title>
+    <title>Tree Catalog</title>
+    <link href="/public/stylesheets/trees.css" rel="stylesheet" type="text/css">
   </head>
   <body>
-    <%=context.picturePath%>
-    <%=context.name%>
-    <%=context.description%>
+      {{context.imageTag}}
+      <br>
+      <div id="tree-info">
+      <h1>Tree Name:</h1><div class="treeName">{{context.name}}</div>
+      <br>
+      <h1>Description:</h1> <div class="treeInfo">{{context.description}}</div>
+    </div>
   </body>
 </html>

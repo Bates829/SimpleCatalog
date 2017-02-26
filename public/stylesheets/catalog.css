@@ -1,0 +1,16 @@
+h1 {
+  color: blue;
+}
+img {
+  width: 150px;
+  height: 150px;
+  border-radius: 25px
+}
+
+#image-upload-form{
+  align-items: center;
+  border:2px solid blue;
+  border-radius: 25px;
+  background-color: white;
+  padding: 10px
+}

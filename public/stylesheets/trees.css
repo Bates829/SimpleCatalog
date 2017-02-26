@@ -1,0 +1,19 @@
+h1{
+  color: red;
+}
+img{
+  width:300px;
+  border-radius: 25px;
+}
+
+.treeName{
+  font-size: 18px;
+}
+
+.treeInfo{
+  font-size: 18px;
+}
+
+#tree-info{
+  border: 2px solid red;
+}
