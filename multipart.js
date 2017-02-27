@@ -139,7 +139,7 @@ function parseContent(buffer, callback) {
   // multipart content
   var index = buffer.indexOf(DOUBLE_CRLF);
   var head = buffer.slice(0, index).toString();
-  var body = buffer.slice(index + 4, buffer.length-index-4);
+  var body = buffer.slice(index + 4, buffer.length-4);
 
   // We need to parse the headers from the head section
   // these will be stored as an associative array
@@ -154,7 +154,7 @@ function parseContent(buffer, callback) {
   // We expect all headers to have a Content-Disposition
   // header with a name attribute. If not, we have a
   // malformed header and can stop processing
-  var name = /name="([\w\s\-_]+)"/.exec(headers['content-disposition']);
+  var name = /name="([^;"]+)"/.exec(headers['content-disposition']);
   if(!name) return callback("No name in multipart content header");
 
   // If our content is a file, we expect to see a filename
@@ -170,6 +170,6 @@ function parseContent(buffer, callback) {
     callback(false, [name[1], {filename: filename[1], contentType: contentType, data: body}]);
   } else {
     // send the key/value pair using the callback
-    callback(false, [name[1], buffer.toString()]);
+    callback(false, [name[1], body.toString()]);
   }
 }

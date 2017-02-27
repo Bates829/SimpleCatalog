@@ -21,15 +21,15 @@ var treeStyle = fs.readFileSync('public/stylesheets/trees.css');
 
 template.loadDir('templates');
 
-/*Variable to store JSON files and call loadDir to get files*/
+/*Variable to store JSON files and call loadJSONDir to get files*/
 var jsonfiles = {};
-loadDir('public/JSON');
+loadJSONDir('public/JSON');
 
-/** @function loadDir
-* Loads directory of JSON files
+/** @function loadJSONDir
+* Loads directory of JSON files from public and parses them
 * @param {string} directory - The directory that will loaded
 */
-function loadDir(directory){
+function loadJSONDir(directory){
 	var dir = fs.readdirSync(directory);
 	dir.forEach(function(file){
 		var filePath = directory + '/' + file;
@@ -40,24 +40,6 @@ function loadDir(directory){
 	});
 }
 
-/** @function getImageNames
- * Retrieves the filenames for all images in the
- * /images directory and supplies them to the callback.
- * @param {function} callback - function that takes an
- * error and array of filenames as parameters
- */
-function getImageNames(callback){
-	fs.readdir('public/images/', function(err, fileNames){
-			if(err){
-				callback(err, undefined);
-			}
-			else {
-				callback(false, fileNames)
-			}
-	});
-}
-
-
 /**
  * @function buildCatalog
  * A helper function to build an HTML string
@@ -67,23 +49,23 @@ function getImageNames(callback){
  */
 function buildCatalog(imageTags) {
  	return template.render('catalog.html', {
- 		imageTags: treeNamesToTags(imageTags).join(' ')
+ 		imageTags: treeToHTML(imageTags).join(' ')
  	});
  }
 
- /** @function treeNamesToTags
+ /** @function treeToHTML
   * Helper function that takes an array of image
   * filenames, and returns an array of HTML img
-  * tags build using those names.
+  * tags build using those names with a link to individual
+	* tree pages.
   * @param {string[]} filenames - the image filenames
   * @return {string[]} an array of HTML img tags
   */
- function treeNamesToTags(fileNames){
+ function treeToHTML(fileNames){
  	return fileNames.map(function(fileName){
  		return `<a href = "${'tree/' + fileName.split('.')[0]}"><img src="${fileName}" alt="${fileName}"></a>`;
  	});
  }
-
 
 /** @function serveImage
  * A function to serve an image file.
@@ -107,7 +89,8 @@ function serveImage(fileName, req, res){
 }
 
 /** @function getTreeImage
-* @param {function} callback - function thattakes an error
+* A function that loads in the images from images directory
+* @param {function} callback - function that takes an error
 * and array of filenames as parameters
 */
 function getTreeImage(callback){
@@ -122,6 +105,7 @@ function getTreeImage(callback){
 }
 
 /** @function getJSON
+* A function that loads in the JSON files from the JSON directory
 * @param {function} callback - function thattakes an error
 * and array of filenames as parameters
 */
@@ -137,6 +121,7 @@ function getJSON(callback){
 }
 
 /** @function serveTrees
+* A function that serves the pages for each tree
 * @param {string} filename
 * @param {http.incomingRequest} - the request object
 * @param {http.serverResponse} - the response object
@@ -147,27 +132,31 @@ function serveTrees(filename, req, res){
 }
 
 /** @function buildTreePage
+* A function that builds a page for individual
+* trees by getting the path, name, and description
 * @param {string} - filename of tree image
 * @return returns a new page of selected tree
 */
 function buildTreePage(filename){
 	var data = jsonfiles[filename];
 	return template.render('treeData.html', {
-		imageTag: treeNameToHTMLTag(data.path),
+		imageTag: treePathToHTML(data.path),
 		name: data.name,
 		description: data.description
 	});
 }
 
 /** @function treeToHTMLTag
+* A function that turns image path to an HTML tag
 * @param {string} - the tree image file
 * @return {string} - tree image tag
 */
-function treeNameToHTMLTag(treeName){
-	return `<img src ="${treeName}" alt="Picture of tree">`;
+function treePathToHTML(treeName){
+	return `<img src ="${treeName}" alt="An example of this tree">`;
 }
 
 /** @function serveAll
+* A function that serves all the images when called
 * @param {http.incomingRequest} - the request object
 * @param {http.serverResponse} - the response object
 */
@@ -186,6 +175,9 @@ function serveAll(req, res){
 }
 
 /** @function uploadJSONData
+* A function to process an http POST request
+ * and upload JSON data (image, name, description)
+* inputted by user on catalog page.
 * @param {http.incomingRequest} - the request object
 * @param {http.serverResponse} - the response object
 */
@@ -196,10 +188,9 @@ function uploadJSONData(req, res){
 			name: req.body.name,
 			description: req.body.description
 		};
-		var jsonName = req.body.image.filename.split('.')[0];
-		var jsonExtension = '.json';
-		fs.writeFile("public/JSON/" + jsonName	+ jsonExtension, JSON.stringify(jsonData));
-		jsonfiles[jsonName] = jsonData;
+		var jsonImage = req.body.image.filename.split('.')[0];
+		fs.writeFile("public/JSON/" + jsonImage	+ ".json", JSON.stringify(jsonData));
+		jsonfiles[jsonImage] = jsonData;
 		uploadImage(req, res);
 	});
 }
