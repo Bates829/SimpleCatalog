@@ -1,21 +1,24 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Tree Catalog</title>
+    <title id="title">Tree Catalog</title>
     <link href="/public/stylesheets/catalog.css" rel="stylesheet" type="text/css"/>
   </head>
   <body>
     <h1>Tree Catalog</h1>
     {{context.imageTags}}
     <br>
+    <br>
+    <div id="border"></div>
+    <br>
     <form id="image-upload-form" action="" method="POST" enctype="multipart/form-data">
       <h2>Upload New Tree</h2>
       <br>
-      Upload Image: <input type="file" name="image"><br>
+      <strong>Upload Image:</strong> <input type="file" name="image"><br>
       <br>
-      Name: <input type="text" name="name" id="treeName"><br>
+      <strong>Name:</strong> <input type="text" name="name" id="treeName"><br>
       <br>
-      Description: <input type="text" name="description" id="treeInfo"><br>
+      <strong>Description:</strong> <input type="text" name="description" id="treeInfo"><br>
       <br>
       <input type="submit" value="Upload Image">
     </form>

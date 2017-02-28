@@ -1,14 +1,22 @@
 h1 {
   color: blue;
 }
+h2{
+  color: blue;
+  text-align: center;
+}
 img {
   width: 150px;
   height: 150px;
-  border-radius: 25px
+  border-radius: 25px;
 }
-
+#border{
+  border-bottom: 5px solid black;
+  width: 103%;
+  margin-left: -10px;
+}
 #image-upload-form{
-  align-items: center;
+  text-align: center;
   border:2px solid blue;
   border-radius: 25px;
   background-color: white;

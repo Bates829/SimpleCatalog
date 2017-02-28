@@ -42,7 +42,7 @@ function loadJSONDir(directory){
 
 /**
  * @function buildCatalog
- * A helper function to build an HTML string
+ * A helper function to build an HTML file
  * of a tree catalog webpage.
  * @param {string[]} imageTags - the HTML for the individual
  * catalog images.
